@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>你的压力，从哪来？</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: #faf8f5;
+    color: #3d3d3d;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    line-height: 1.7;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.06);
+    overflow: hidden;
+    transition: all 0.35s ease;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Screen ===== */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 40px 28px;
+    animation: fadeSlideIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Cover ===== */
+  .cover {
+    text-align: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 48px 28px;
+  }
+  .cover .icon { font-size: 52px; }
+  .cover h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c2c2c;
+    letter-spacing: 1px;
+    line-height: 1.4;
+  }
+  .cover .subtitle {
+    color: #8a8a8a;
+    font-size: 14px;
+    margin-top: -12px;
+  }
+  .cover .meta {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    font-size: 13px;
+    color: #a0a0a0;
+  }
+  .cover .meta span { display: flex; align-items: center; gap: 4px; }
+  .cover .disclaimer {
+    font-size: 11px;
+    color: #c0bdb8;
+    line-height: 1.6;
+    margin-top: -8px;
+  }
+
+  /* ===== Buttons ===== */
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 14px 0;
+    border: none;
+    border-radius: 12px;
+    background: #5b7a6b;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover  { background: #4e6a5d; }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-outline {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
+    border: 1.5px solid #d0cfcd;
+    border-radius: 12px;
+    background: transparent;
+    color: #5b5b5b;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-outline:hover { border-color: #5b7a6b; color: #5b7a6b; }
+
+  .btn-share {
+    background: #c4a882;
+  }
+  .btn-share:hover { background: #b3936a; }
+
+  /* ===== Question ===== */
+  .question-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .question-num {
+    font-size: 13px;
+    color: #b0b0b0;
+    letter-spacing: 1px;
+  }
+  .stage-tag {
+    font-size: 11px;
+    color: #c4a882;
+    background: #fdf9f3;
+    padding: 3px 10px;
+    border-radius: 10px;
+    letter-spacing: 1px;
+  }
+  .question-text {
+    font-size: 18px;
+    font-weight: 500;
+    color: #2c2c2c;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+  .options { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .option {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    border: 1.5px solid #e8e6e3;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-size: 15px;
+    color: #4a4a4a;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .option:hover { border-color: #c4a882; background: #fdf9f3; }
+  .option.selected { border-color: #5b7a6b; background: #f2f7f4; color: #2c2c2c; }
+  .option .letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #f0eeeb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8a8a8a;
+    flex-shrink: 0;
+    transition: all 0.25s;
+  }
+  .option.selected .letter { background: #5b7a6b; color: #fff; }
+
+  .btn-next {
+    margin-top: 24px;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: all 0.25s;
+  }
+  .btn-next.enabled { opacity: 1; pointer-events: auto; }
+  .hint-tap {
+    text-align: center;
+    font-size: 12px;
+    color: #c0bdb8;
+    margin-top: 8px;
+    transition: opacity 0.25s;
+  }
+  .hint-tap.hidden { opacity: 0; }
+
+  /* ===== Progress ===== */
+  .progress-bar {
+    display: flex;
+    gap: 5px;
+    margin-top: 18px;
+    justify-content: center;
+  }
+  .progress-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #e0dedb;
+    transition: background 0.3s;
+  }
+  .progress-dot.done { background: #5b7a6b; }
+  .progress-dot.current { background: #c4a882; }
+
+  /* ===== Result ===== */
+  .result { text-align: center; gap: 20px; padding: 36px 28px; }
+  .result .type-emoji { font-size: 48px; }
+  .result .type-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    background: #f2f7f4;
+    color: #5b7a6b;
+  }
+  .result .type-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c2c2c;
+  }
+  .result .quote {
+    color: #6a6a6a;
+    font-size: 15px;
+    line-height: 1.8;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  .result .insight {
+    background: #faf8f5;
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 14px;
+    color: #5a5a5a;
+    line-height: 1.8;
+  }
+  .result .insight strong { color: #3d3d3d; }
+  .result .power-box {
+    text-align: center;
+    font-size: 14px;
+    color: #5b7a6b;
+    font-weight: 500;
+    padding: 8px 0;
+  }
+  .result .free-hook {
+    background: #fdf9f3;
+    border: 1.5px solid #c4a882;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 4px;
+  }
+  .result .free-hook .hook-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c2c2c;
+  }
+  .result .free-hook .hook-desc {
+    font-size: 13px;
+    color: #8a8a8a;
+    margin-top: 4px;
+  }
+  .result .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .result .disclaimer-line {
+    font-size: 11px;
+    color: #c0bdb8;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center;
+    padding: 8px;
+    font-size: 11px;
+    color: #c0c0c0;
+    letter-spacing: 1px;
+  }
+
+  /* ===== Canvas container (hidden) ===== */
+  #posterCanvas { display: none; }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 420px) {
+    .container { max-width: 100%; border-radius: 16px; }
+    .screen { padding: 32px 20px; }
+    .cover h1 { font-size: 22px; }
+    .question-text { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- Cover Screen -->
+  <div class="screen cover active" id="cover">
+    <div class="icon">🌿</div>
+    <h1>你的压力，从哪来？</h1>
+    <p class="subtitle">3 分钟 · 10 道题 · 找到压力真正的根源</p>
+    <div class="meta">
+      <span>⏱ 3 分钟</span>
+      <span>📋 10 题</span>
+    </div>
+    <button class="btn-primary" onclick="start()">开始了解自己</button>
+    <p class="disclaimer">⚠️ 本工具仅供自我觉察与个人成长参考，<br>不构成心理诊断或治疗建议。</p>
+  </div>
+</div>
+
+<!-- Hidden canvas for poster generation -->
+<canvas id="posterCanvas" width="600" height="900"></canvas>
+
+<script>
+// ─── v2.1 合规版 · 压力根源觉察 ───
+
+const questions = [
+  // 第一层：觉察（Q1-Q2）
+  {
+    stage: "觉察",
+    q: "当压力感来临的时候，你最先感觉到的是：",
+    opts: [
+      { letter: "A", text: "脑子里好多画面在闪，停不下来" },
+      { letter: "B", text: "心里有个声音「万一……怎么办」" },
+      { letter: "C", text: "身体有反应——胸口闷、肩膀紧、胃里翻" },
+      { letter: "D", text: "说不上来，就是一种说不清楚的不踏实" }
+    ]
+  },
+  {
+    stage: "觉察",
+    q: "如果把你此刻感受到的压力变成一个画面，它最像：",
+    opts: [
+      { letter: "A", text: "一根越绷越紧的弦，随时会断" },
+      { letter: "B", text: "一团越来越浓的灰雾，看不清前路" },
+      { letter: "C", text: "一块石头压在胸口，说不上来但就是沉" },
+      { letter: "D", text: "好像没什么具体画面，就是感觉不踏实" }
+    ]
+  },
+  // 第二层：探根（Q3-Q7）
+  {
+    stage: "探根",
+    q: "感到有压力时，你最常做的事是：",
+    opts: [
+      { letter: "A", text: "列清单、反复检查、把所有事情都安排好" },
+      { letter: "B", text: "明明想好好说，开口就变成了发火" },
+      { letter: "C", text: "什么都答应，笑着说「没事」，心里在哭" },
+      { letter: "D", text: "刷手机、发呆、逃避，假装不存在" }
+    ]
+  },
+  {
+    stage: "探根",
+    q: "你对自己的要求里，哪条最让你累：",
+    opts: [
+      { letter: "A", text: "「我必须做好一切，才对得起信任我的人」" },
+      { letter: "B", text: "「我不能软下来，否则就会被欺负」" },
+      { letter: "C", text: "「别人的感受比我重要，我先消失」" },
+      { letter: "D", text: "「我不能停下来，停下来就什么都没有了」" }
+    ]
+  },
+  {
+    stage: "探根",
+    q: "睡前脑子停不下来的时候，你通常在反复想什么：",
+    opts: [
+      { letter: "A", text: "想明天还有哪些事没安排好，怕漏掉什么" },
+      { letter: "B", text: "想今天某件事自己没做好，越想越觉得自己不够好" },
+      { letter: "C", text: "想白天某个人是不是不高兴了，自己是不是说错话了" },
+      { letter: "D", text: "我一般不会这样，睡得挺好" }
+    ]
+  },
+  {
+    stage: "探根",
+    q: "此刻你最希望有人对你说哪句话：",
+    opts: [
+      { letter: "A", text: "「你已经做得很好了，不需要完美」" },
+      { letter: "B", text: "「我看见你了，你不是一个人在扛」" },
+      { letter: "C", text: "「你可以说不，你的感受很重要」" },
+      { letter: "D", text: "「你本来就很好，追求更好是你的天性」" }
+    ]
+  },
+  {
+    stage: "探根",
+    q: "对于「放松」这件事，你真实的状态最接近哪种：",
+    opts: [
+      { letter: "A", text: "「放松」是个陌生的词，我已经习惯了紧绷" },
+      { letter: "B", text: "我知道该放松，但一放松就有负罪感，觉得在浪费时间" },
+      { letter: "C", text: "我很想放松，但总感觉有人在看着我，不敢松下来" },
+      { letter: "D", text: "我能放松，但觉得还可以活得更通透" }
+    ]
+  },
+  // 第三层：转化（Q8-Q10）
+  {
+    stage: "转化",
+    q: "回想你曾经撑过最难的那次，你是怎么走出来的：",
+    opts: [
+      { letter: "A", text: "制定了清晰的计划，一步一步执行" },
+      { letter: "B", text: "有人陪在身边，给了我力量" },
+      { letter: "C", text: "我允许自己崩溃，然后发现天没塌" },
+      { letter: "D", text: "我暂时放下了，后来事情自己变了" }
+    ]
+  },
+  {
+    stage: "转化",
+    q: "如果你内心的力量可以画成一幅画，它最接近：",
+    opts: [
+      { letter: "A", text: "一座山——风雨来了，我还是站在那" },
+      { letter: "B", text: "一团火——温暖自己，也照亮了别人" },
+      { letter: "C", text: "一条河——顺势而为，不硬扛" },
+      { letter: "D", text: "一片海——什么都容纳，深不见底" }
+    ]
+  },
+  {
+    stage: "转化",
+    q: "给自己一句话。哪句让你心跳慢下来：",
+    opts: [
+      { letter: "A", text: "「我可以不完美，但我已经足够好了」" },
+      { letter: "B", text: "「我被爱着，即使现在什么都做不好」" },
+      { letter: "C", text: "「停下来不是放弃，是为了更好地出发」" },
+      { letter: "D", text: "「我其实挺好的，但我相信还可以活得更好」" }
+    ]
+  }
+];
+
+const results = {
+  control: {
+    emoji: "🔥",
+    label: "掌控驱动型",
+    quote: "你不是压力大，你是太久没有人替你分担了。",
+    insight: "<strong>根源：</strong>你扛了太多，因为你不相信别人能做好。渴望确定性，害怕失控——这份责任感让你优秀，也让你累。",
+    powers: "你已有的力量：执行力 · 责任感 · 行动力",
+    hookTitle: "《放下一点点，反而更有力》",
+    hookDesc: "一份给掌控者的减压练习手册",
+    color: "#4a6b7e"
+  },
+  self: {
+    emoji: "🪞",
+    label: "自我提升型",
+    quote: "你心里那个「我还不够好」的声音，不是你自己的。",
+    insight: "<strong>根源：</strong>你一直在追求更好，但那个「还不够」的声音是早年别人写给你的。你本来就有价值，不需要证明。",
+    powers: "你已有的力量：自省力 · 进取心 · 成长性",
+    hookTitle: "《你已经够好了》",
+    hookDesc: "一份给自我提升者的内耗缓解练习手册",
+    color: "#5b7a6b"
+  },
+  relation: {
+    emoji: "🌀",
+    label: "关系敏感型",
+    quote: "你不是脾气差，你只是太累了，太久了没人理解你。",
+    insight: "<strong>根源：</strong>你一直在替别人想，忘了自己也需要被关注。渴望被看见、被爱——这份敏感是你的超能力，不是弱点。",
+    powers: "你已有的力量：共情力 · 韧性 · 温暖他人的能力",
+    hookTitle: "《不讨好也被喜欢》",
+    hookDesc: "一份给关系敏感者的边界练习手册",
+    color: "#c4956a"
+  },
+  growth: {
+    emoji: "🌱",
+    label: "成长觉察型",
+    quote: "你本来就不错，但你相信还可以更好。优秀的人从不停止探索。",
+    insight: "<strong>根源：</strong>你不是被压力推着走，而是被内心的探索欲拉着向前。个人成长不是「解决问题」，是让本就好的生活变得卓越。",
+    powers: "你已有的力量：好奇心 · 觉察力 · 超越自我的渴望",
+    hookTitle: "《优秀者的下一层》",
+    hookDesc: "一份NLP视角的潜力激活手册",
+    color: "#8b7e5c"
+  },
+  body: {
+    emoji: "🌊",
+    label: "身心紧绷型",
+    quote: "你的身体替你扛了太多。是时候让它知道，可以放松了。",
+    insight: "<strong>根源：</strong>你的身体习惯了警觉模式——那些你没说出口的话、没放下的情绪，身体都替你记住了。身体在保护你，不是伤害你。",
+    powers: "你已有的力量：直觉力 · 生存力 · 对身体的觉察",
+    hookTitle: "《让身体记住放松的感觉》",
+    hookDesc: "一份7天身体扫描与放松练习手册",
+    color: "#6b6b8a"
+  }
+};
+
+// ─── State ───
+let answers = {};
+let currentQ = 0;
+
+// ─── Build screens ───
+const app = document.getElementById('app');
+
+questions.forEach((q, i) => {
+  const screen = document.createElement('div');
+  screen.className = 'screen';
+  screen.id = 'q' + i;
+
+  let optsHTML = q.opts.map(o => `
+    <div class="option" data-letter="${o.letter}" onclick="select(${i}, '${o.letter}', this)">
+      <span class="letter">${o.letter}</span>
+      <span>${o.text}</span>
+    </div>
+  `).join('');
+
+  let dotsHTML = questions.map((_, d) => {
+    let cls = d < i ? 'done' : (d === i ? 'current' : '');
+    return `<div class="progress-dot ${cls}"></div>`;
+  }).join('');
+
+  screen.innerHTML = `
+    <div class="question-header">
+      <span class="question-num">第 ${i+1} / ${questions.length} 题</span>
+      <span class="stage-tag">${q.stage}</span>
+    </div>
+    <div class="question-text">${q.q}</div>
+    <div class="options">${optsHTML}</div>
+    <button class="btn-primary btn-next" id="btn${i}" onclick="next(${i})">${i < questions.length-1 ? '下一题 →' : '查看结果'}</button>
+    <div class="hint-tap" id="hint${i}">👆 请先选择一个答案</div>
+    <div class="progress-bar">${dotsHTML}</div>
+  `;
+
+  app.appendChild(screen);
+});
+
+// Result screen
+const resultScreen = document.createElement('div');
+resultScreen.className = 'screen result';
+resultScreen.id = 'result';
+app.appendChild(resultScreen);
+
+// Footer
+const footer = document.createElement('div');
+footer.className = 'footer';
+footer.textContent = '湖南润鼎文化 · 中国NLP中心';
+app.appendChild(footer);
+
+// ─── Functions ───
+function start() {
+  answers = {};
+  currentQ = 0;
+  switchTo('q0');
+}
+
+function select(qIdx, letter, el) {
+  answers[qIdx] = letter;
+  const parent = el.parentElement;
+  parent.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btn'+qIdx).classList.add('enabled');
+  document.getElementById('hint'+qIdx).classList.add('hidden');
+}
+
+function next(qIdx) {
+  if (answers[qIdx] === undefined) return;
+  if (qIdx < questions.length - 1) {
+    currentQ = qIdx + 1;
+    switchTo('q'+currentQ);
+  } else {
+    showResult();
+  }
+}
+
+function switchTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── Scoring (v2.1 algorithm) ───
+function calculateResult() {
+  // Count types from Q3-Q10 (questions index 2-9), with special Q7 handling
+  let countA = 0, countB = 0, countC = 0, countD = 0;
+  let bodyScore = 0;
+
+  // Q1, Q2: body detection only
+  if (answers[0] === 'C') bodyScore++;
+  if (answers[1] === 'C') bodyScore++;
+
+  for (let i = 2; i < 10; i++) {
+    const ans = answers[i];
+    if (i === 6) {
+      // Q7 (index 6): A → bodyScore, B→掌控, C→关系, D→成长
+      if (ans === 'A') bodyScore++;
+      else if (ans === 'B') countA++;
+      else if (ans === 'C') countC++;
+      else if (ans === 'D') countD++;
+    } else {
+      if (ans === 'A') countA++;
+      else if (ans === 'B') countB++;
+      else if (ans === 'C') countC++;
+      else if (ans === 'D') countD++;
+    }
+  }
+
+  // Determine type
+  let resultKey;
+  if (bodyScore >= 2) {
+    resultKey = 'body';
+  } else {
+    // Find max
+    const maxCount = Math.max(countA, countB, countC, countD);
+    // Tiebreaker priority: C > A > B > D
+    if (countC === maxCount) resultKey = 'relation';
+    else if (countA === maxCount) resultKey = 'control';
+    else if (countB === maxCount) resultKey = 'self';
+    else resultKey = 'growth';
+  }
+
+  return resultKey;
+}
+
+function showResult() {
+  const key = calculateResult();
+  const r = results[key];
+
+  resultScreen.innerHTML = `
+    <div class="type-emoji">${r.emoji}</div>
+    <span class="type-badge">${r.label}</span>
+    <div class="type-title">${r.label}</div>
+    <p class="quote">${r.quote}</p>
+    <div class="insight">${r.insight}</div>
+    <div class="power-box">✨ ${r.powers}</div>
+    <div class="free-hook">
+      <div class="hook-title">📩 ${r.hookTitle}</div>
+      <div class="hook-desc">${r.hookDesc}</div>
+    </div>
+    <p class="disclaimer-line">扫码加微信 · 免费领取完整版</p>
+    <div class="actions">
+      <button class="btn-primary btn-share" onclick="generatePoster('${key}')">📤 生成海报分享朋友圈</button>
+      <button class="btn-outline" onclick="retake()">⟳ 再测一次</button>
+    </div>
+    <p class="disclaimer-line">⚠️ 本工具仅供自我觉察与个人成长参考，<br>不构成心理诊断或治疗建议。<br>如有严重情绪困扰，请寻求专业医疗机构的帮助。</p>
+  `;
+
+  switchTo('result');
+}
+
+function retake() {
+  answers = {};
+  currentQ = 0;
+  switchTo('cover');
+}
+
+// ─── Poster Generation ───
+function generatePoster(key) {
+  const r = results[key];
+  const canvas = document.getElementById('posterCanvas');
+  // Show canvas temporarily for rendering then download
+  canvas.style.display = 'block';
+  canvas.style.position = 'fixed';
+  canvas.style.top = '0';
+  canvas.style.left = '0';
+  canvas.style.zIndex = '9999';
+  canvas.style.width = '100vw';
+  canvas.style.height = '100vh';
+  canvas.style.background = '#faf8f5';
+
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#faf8f5';
+  ctx.fillRect(0, 0, W, H);
+
+  // Top accent bar
+  ctx.fillStyle = r.color;
+  ctx.fillRect(0, 0, W, 6);
+
+  // Emoji
+  ctx.font = '64px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(r.emoji, W/2, 110);
+
+  // Title
+  ctx.fillStyle = '#2c2c2c';
+  ctx.font = 'bold 28px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('我的压力根源', W/2, 170);
+
+  // Type label
+  ctx.fillStyle = r.color;
+  ctx.font = 'bold 36px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText(r.label, W/2, 230);
+
+  // Divider
+  ctx.strokeStyle = '#e0dedb';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(80, 270);
+  ctx.lineTo(W - 80, 270);
+  ctx.stroke();
+
+  // Quote (word wrap)
+  ctx.fillStyle = '#4a4a4a';
+  ctx.font = '18px "PingFang SC", "Microsoft YaHei", sans-serif';
+  wrapText(ctx, r.quote, W/2, 320, W - 120, 30);
+
+  // Insight (simplified)
+  ctx.fillStyle = '#8a8a8a';
+  ctx.font = '15px "PingFang SC", "Microsoft YaHei", sans-serif';
+  const insightText = r.insight.replace(/<[^>]+>/g, '');
+  wrapText(ctx, insightText, W/2, 400, W - 100, 24);
+
+  // Powers
+  ctx.fillStyle = r.color;
+  ctx.font = 'bold 16px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('✨ ' + r.powers, W/2, 490);
+
+  // Hook
+  ctx.fillStyle = '#2c2c2c';
+  ctx.font = 'bold 20px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('📩 ' + r.hookTitle, W/2, 550);
+
+  ctx.fillStyle = '#8a8a8a';
+  ctx.font = '15px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText(r.hookDesc, W/2, 580);
+
+  // CTA
+  ctx.fillStyle = '#5b7a6b';
+  ctx.font = 'bold 18px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('你是哪种压力根源？扫码测一测', W/2, 650);
+
+  // QR placeholder
+  ctx.fillStyle = '#e0dedb';
+  ctx.fillRect(W/2 - 60, 680, 120, 120);
+  ctx.fillStyle = '#8a8a8a';
+  ctx.font = '13px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('二维码区域', W/2, 745);
+
+  // Footer
+  ctx.fillStyle = '#c0bdb8';
+  ctx.font = '11px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('本工具仅供自我觉察参考，不构成心理诊断或治疗建议', W/2, 850);
+
+  // Trigger download
+  setTimeout(() => {
+    const link = document.createElement('a');
+    link.download = '压力根源_' + r.label + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    // Hide canvas
+    canvas.style.display = 'none';
+  }, 300);
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const chars = text.split('');
+  let line = '';
+  let currentY = y;
+  for (let i = 0; i < chars.length; i++) {
+    const testLine = line + chars[i];
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && i > 0) {
+      ctx.fillText(line, x, currentY);
+      line = chars[i];
+      currentY += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, currentY);
+}
+
+// Share fallback
+function share() {
+  if (navigator.share) {
+    navigator.share({
+      title: '你的压力根源是什么样的？',
+      text: '3分钟，了解你的压力从哪来',
+      url: location.href
+    });
+  } else {
+    alert('复制链接分享给朋友吧！');
+  }
+}
+</script>
+
+</body>
+</html>
